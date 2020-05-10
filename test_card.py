@@ -1,0 +1,80 @@
+import pytest, poker
+from poker import PKCard, Deck, Hands, Card, suits, ranks
+
+
+def test_PKCard_init():
+    card = PKCard('AC')
+    assert card.rank == 'A' and card.suit == 'C'
+    assert card.card == 'AC'
+
+def test_PKCard_init_exception():
+    for face in ['10S', 'BD', 'TA']:
+        with pytest.raises(ValueError):
+            PKCard(face)
+
+def test_PKCard_repr():
+    assert repr(PKCard('AC')) == 'AC'
+
+@pytest.fixture
+def all_faces():
+    return [r+s for r in ranks for s in suits]
+
+def test_PKCard_value(all_faces):
+    for face in all_faces:
+        card, expected = PKCard(face), PKCard.VALUES[face[0]]
+        assert card.value() == expected
+
+@pytest.fixture
+def c9C():
+    return PKCard('9C')
+
+@pytest.fixture
+def c9H():
+    return PKCard('9H')
+
+@pytest.fixture
+def cTH():
+    return PKCard('TH')
+
+def test_PKCard_comp(c9C, c9H, cTH):
+    assert c9C == c9C and c9C == c9H
+    assert c9H < cTH and c9C < cTH
+    assert c9C <= c9H <= cTH
+    assert cTH > c9H and cTH > c9C
+    assert cTH >= c9H >= c9C
+    assert c9C != cTH and c9H != cTH
+
+def test_PKCard_sort(all_faces):
+    all_cards = [PKCard(r+s) for r in ranks for s in suits ]
+    import random
+    random.shuffle(all_cards)
+    all_cards.sort()
+    assert [c.value() for c in all_cards] == sorted([i for s in suits for i in range(2,2+len(ranks))])
+
+@pytest.fixture
+def deck():
+    return Deck(PKCard)
+
+def test_Deck_init(deck):
+    assert len(deck.deck) == 52
+    assert isinstance(deck.deck[0], PKCard)
+
+def test_Deck_pop(deck):
+    card = deck.pop()
+    assert card.rank == ranks[-1] and card.suit == suits[-1] \
+        and len(deck.deck) == 52 - 1
+
+def test_Deck_len(deck):
+    deck.pop(); deck.pop()
+    assert len(deck.deck) == deck.__len__() == len(deck) == 52 - 2
+
+def test_Deck_getitem(deck):
+    assert (deck[10].rank, deck[10].suit) \
+        == (deck.deck[10].rank, deck.deck[10].suit)
+
+# def test_is_flush(deck):
+#     a1=[PKCard('3S'),PKCard('4S'),PKCard('5S'),PKCard('6S'),PKCard('7S')]
+#     a1 = Hands(a1)
+#     test2 = a1.is_flush
+#     assert test2 == False 
+
